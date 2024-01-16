@@ -1,30 +1,82 @@
-import cv2
-import numpy as np
-from PIL import Image
-import os
-from zipfile import ZipFile
+import flet as ft
+import process
 
-def process_spritesheet(input_path, output_directory):
-    img = cv2.imread(input_path, cv2.IMREAD_UNCHANGED)
-    alpha_channel = img[:, :, 3]
+def main(page: ft.Page):
 
-    contours, _ = cv2.findContours(alpha_channel, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    global spritesheet_path
 
-    if not os.path.exists(output_directory):
-        os.makedirs(output_directory)
+    # Picking a file from wizard
+    def show_browse_window(e):
+        browse_wizard.pick_files(
+            allow_multiple = False, 
+            allowed_extensions=["jpg", "png"],
+            dialog_title="Choose a spritesheet"
+            )
 
-    images = []
-    for i, contour in enumerate(contours):
-        x, y, w, h = cv2.boundingRect(contour)
-        pose = img[y:y+h, x:x+w]
-        images.append(pose)
-        cv2.imwrite(os.path.join(output_directory, f"pose_{i + 1}.png"), pose)
+    # After file has been picked
+    def get_file(e: ft.FilePickerResultEvent):
 
-    # Save images in a zip file
-    zip_file_path = os.path.join(output_directory, "output_images.zip")
-    with ZipFile(zip_file_path, 'w') as zip_file:
-        for i, pose in enumerate(images):
-            zip_file.write(os.path.join(output_directory, f"pose_{i + 1}.png"), f"pose_{i + 1}.png")
+        global spritesheet_path
+        spritesheet_path = e.files[0].path
+        print(spritesheet_path)
 
-if __name__ == "__main__":
-    process_spritesheet("spritesheet.png", "output_directory")
+        if e.files:
+            picked_files.value = (", ".join(map(lambda f: f.name, e.files)))
+            status.value = "The spritesheet has been processed successfully!"
+
+            # User picked a file
+            process.process_spritesheet(spritesheet_path, "output")
+
+        picked_files.update()
+        preview_load()
+
+    # Window Settings
+    page.window_width = 640     
+    page.window_height = 480   
+    page.window_resizable = False
+    page.theme_mode = ft.ThemeMode.DARK
+    page.update()
+
+    # Window Elements
+    browse_wizard = ft.FilePicker(on_result=get_file)
+    picked_files = ft.Text()
+    status = ft.Text()
+
+    status.value = "Select a spritesheet to process it."
+
+    page.overlay.append(browse_wizard)
+
+    page.add(ft.Row(
+        [
+            ft.ElevatedButton("Browse for spritesheet", on_click=show_browse_window),
+            picked_files,
+        ]))
+    
+    page.add(ft.Row(
+        [
+            status,
+        ]))
+        
+    # Preview Window
+
+    def preview_load():
+        
+        global spritesheet_path
+        global spritesheet
+
+        if spritesheet_path != "":
+
+            spritesheet = ft.Image(
+                src = spritesheet_path,
+                # src = str(browse_wizard.result.path),
+                width = 240,
+                height = 240,
+                fit=ft.ImageFit.CONTAIN,
+            )
+
+            page.add(ft.Row([
+                spritesheet,
+            ]))
+
+
+ft.app(target=main)
