@@ -4,6 +4,7 @@ from PIL import Image
 import os
 from zipfile import ZipFile
 
+
 # Split using specific dimension
 def split_image(input_path, output_directory, width, height):
     # Load the image
