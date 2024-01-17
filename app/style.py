@@ -20,7 +20,15 @@ heading_style_sheet: dict = {
     }
 
 preview_image: dict = {
-    "width": "240",
-    "height": "240",
+    "width": 240,
+    "height": 240,
     "error_content": ft.Icon(ft.icons.QUESTION_MARK),
+}
+
+preview_panel: dict = {
+    "border": ft.border.all(2, ft.colors.LIGHT_BLUE),
+    "alignment": ft.alignment.center,
+    "padding": 5,
+    "height": 280,
+    "width": 360,
 }
